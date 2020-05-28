@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_SIGN_IN = 1;
     private static final int REQUEST_CODE_OPEN_DOCUMENT = 2;
+    private static final int REQUEST_CODE_UPLOAD = 3;
 
     private DriveServiceHelper mDriveServiceHelper;
     private String mOpenFileId;
@@ -69,6 +70,15 @@ public class MainActivity extends AppCompatActivity {
                     Uri uri = resultData.getData();
                     if (uri != null) {
                         openFileFromFilePicker(uri);
+                    }
+                }
+                break;
+
+            case REQUEST_CODE_UPLOAD:
+                if (resultCode == Activity.RESULT_OK && resultData != null) {
+                    Uri uri = resultData.getData();
+                    if (uri != null) {
+                        uploadFile(uri);
                     }
                 }
                 break;
@@ -133,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
             Intent pickerIntent = mDriveServiceHelper.createFilePickerIntent();
 
             // The result of the SAF Intent is handled in onActivityResult.
-            startActivityForResult(pickerIntent, REQUEST_CODE_OPEN_DOCUMENT);
+            //startActivityForResult(pickerIntent, REQUEST_CODE_OPEN_DOCUMENT);
+            startActivityForResult(pickerIntent, REQUEST_CODE_UPLOAD);
         }
     }
 
@@ -160,6 +171,21 @@ public class MainActivity extends AppCompatActivity {
                             Log.e(TAG, "Unable to open file from picker.", exception));
         }
     }
+
+    private void uploadFile(Uri uri) {
+        if (mDriveServiceHelper != null) {
+
+
+            Log.d(TAG, "Uploading a file."+ uri.getPath());
+            mDriveServiceHelper.uploadFile(getContentResolver(), uri)
+                    .addOnSuccessListener(fileId -> {
+                        Log.d(TAG, fileId);
+                    })
+                    .addOnFailureListener(exception ->
+                            Log.e(TAG, "Couldn't create file.", exception));
+        }
+    }
+
 
     /**
      * Creates a new file via the Drive REST API.
