@@ -217,6 +217,15 @@ public class DriveServiceHelper {
         return new String[]{name, extension};
     }
 
+
+    public Task<String> getLink (String fileId) {
+        return Tasks.call(mExecutor, () -> {
+
+            String temp = mDriveService.files().get(fileId).execute().getWebViewLink();
+            return temp;
+        });
+
+    }
 }
 
 
