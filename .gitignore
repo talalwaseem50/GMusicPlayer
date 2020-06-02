@@ -84,3 +84,8 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+app/.classpath
+app/.project
+app/build.gradle
+app/proguard-rules.pro
