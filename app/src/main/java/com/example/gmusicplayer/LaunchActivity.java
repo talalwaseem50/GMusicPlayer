@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
+import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,19 +26,41 @@ import androidx.core.content.PermissionChecker;
 import com.example.gmusicplayer.database.Playlist;
 
 import com.example.gmusicplayer.utils.CommonUtils;
+import com.example.gmusicplayer.utils.DriveUtils;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
 import com.example.gmusicplayer.utils.SongsUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.Scope;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class LaunchActivity extends AppCompatActivity {
 
-    String TAG = "LaunchActivityLog";
+    String TAG = "LaunchActivity";
     Boolean sync = false;
+
+    private static final int REQUEST_CODE_SIGN_IN = 1;
+    private DriveUtils mDriveUtils;
+    private SharedPrefsUtils sharedPrefsUtils;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -55,14 +78,104 @@ public class LaunchActivity extends AppCompatActivity {
                 PorterDuff.Mode.MULTIPLY);
 
         if ((getIntent().getBooleanExtra("sync", false))) {
-            SongsUtils songsUtils = new SongsUtils(this);
-            songsUtils.sync();
-            ((TextView) findViewById(R.id.textView10)).setText("Syncing..");
-            sync = true;
-        } else {
             ((TextView) findViewById(R.id.textView10)).setText("Initiating..");
         }
 
+        sharedPrefsUtils = new SharedPrefsUtils(getApplicationContext());
+        requestSignIn();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        super.onActivityResult(requestCode, resultCode, resultData);
+
+        switch (requestCode) {
+            case REQUEST_CODE_SIGN_IN:
+                if (resultCode == Activity.RESULT_OK && resultData != null) {
+                    handleSignInResult(resultData);
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // If request is cancelled, the result arrays are empty.
+        if (requestCode == 1) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                new PerformBackgroundTasks(this, sync).execute("tasks");
+                //weGotPermissions();
+                // permission was granted, yay! Do the
+                // contacts-related task you need to do.
+
+            } else {
+                Toast.makeText(this, "Application needs permission to run. Go to Settings > Apps > " +
+                        "GMusic Player to allow permission.", Toast.LENGTH_SHORT).show();
+                finish();
+                // permission denied, boo! Disable the functionality that depends on this permission.
+            }
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+
+    private void requestSignIn() {
+        Log.d(TAG, "Requesting sign-in");
+
+        GoogleSignInOptions signInOptions =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
+                        .build();
+        GoogleSignInClient client = GoogleSignIn.getClient(this, signInOptions);
+
+        // The result of the sign-in Intent is handled in onActivityResult.
+        startActivityForResult(client.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+    }
+
+    private void handleSignInResult(Intent result) {
+        GoogleSignIn.getSignedInAccountFromIntent(result)
+                .addOnSuccessListener(googleAccount -> {
+                    Log.d(TAG, "Signed in as " + googleAccount.getEmail());
+
+                    // Use the authenticated account to sign in to the Drive service.
+                    GoogleAccountCredential credential =
+                            GoogleAccountCredential.usingOAuth2(
+                                    this, Collections.singleton(DriveScopes.DRIVE_FILE));
+                    credential.setSelectedAccount(googleAccount.getAccount());
+                    Drive googleDriveService =
+                            new Drive.Builder(
+                                    AndroidHttp.newCompatibleTransport(),
+                                    new GsonFactory(),
+                                    credential)
+                                    .setApplicationName("Drive API Migration")
+                                    .build();
+
+                    // The DriveUtils encapsulates all REST API and SAF functionality.
+                    // Its instantiation is required before handling any onClick actions.
+                    mDriveUtils = new DriveUtils(googleDriveService);
+
+                    Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
+                    ArrayList<SongModel> restoreData = new Gson().fromJson(sharedPrefsUtils.readSharedPrefsString("SONGS_LIST", null), type);
+                    if (restoreData == null)
+                        query();
+                    else
+                        requestStoragePermission();
+
+                    if ((getIntent().getBooleanExtra("sync", false))) {
+                        ((TextView) findViewById(R.id.textView10)).setText("Syncing..");
+                        SongsUtils songsUtils = new SongsUtils(this);
+                        songsUtils.sync();
+                        sync = true;
+                    }
+                })
+                .addOnFailureListener(exception -> Log.e(TAG, "Unable to sign in.", exception));
+    }
+
+    private void requestStoragePermission() {
         if (Build.VERSION.SDK_INT > 22) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.READ_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
@@ -93,40 +206,68 @@ public class LaunchActivity extends AppCompatActivity {
                 new PerformBackgroundTasks(this, sync).execute("task");
             } else {
                 (new CommonUtils(this)).showTheToast("Please enable permission from " +
-                        "Settings > Apps > Noad Player > Permissions.");
+                        "Settings > Apps > GMusic Player > Permissions.");
             }
         } else {
             new PerformBackgroundTasks(this, sync).execute("task");
         }
-
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
-        // If request is cancelled, the result arrays are empty.
-        if (requestCode == 1) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+    /**
+     * Queries the Drive REST API for files visible to this app and lists them in the content view.
+     */
+    private void query() {
+        if (mDriveUtils != null) {
+            Log.d(TAG, "Querying for files.");
 
-                new PerformBackgroundTasks(this, sync).execute("tasks");
-                //weGotPermissions();
-                // permission was granted, yay! Do the
-                // contacts-related task you need to do.
+            mDriveUtils.queryFiles()
+                    .addOnSuccessListener(fileList -> {
+                        ArrayList<SongModel> mainList = new ArrayList<SongModel>();
+                        TimeZone tz = TimeZone.getTimeZone("UTC");
+                        SimpleDateFormat df = new SimpleDateFormat("mm:ss", Locale.getDefault());
+                        df.setTimeZone(tz);
 
-            } else {
-                Toast.makeText(this, "Application needs permission to run. Go to Settings > Apps > " +
-                        "Noad Player to allow permission.", Toast.LENGTH_SHORT).show();
-                finish();
-                // permission denied, boo! Disable the
-                // functionality that depends on this permission.
-            }
+                        for (File file : fileList.getFiles()) {
+                            if (file.getMimeType().contains("audio/mpeg")) {
+                                String link = file.getWebContentLink();
 
-            // other 'case' lines to check for other
-            // permissions this app might request
+                                MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+                                metadataRetriever.setDataSource(link, new HashMap<String, String>());
+
+                                String songName = file.getName();
+                                String title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                                String artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                                String album = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                                String albumID = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST);
+                                String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+                                int currentDuration = Math.round(Integer.parseInt(duration));
+                                String time = String.valueOf(df.format(currentDuration));
+
+                                SongModel songModel = new SongModel();
+                                songModel.setFileName(songName);
+                                songModel.setTitle(title);
+                                songModel.setArtist(artist);
+                                songModel.setAlbum(album);
+                                songModel.setAlbumID(albumID);
+                                songModel.setPath(link);
+                                songModel.setDuration(time);
+                                mainList.add(songModel);
+                            }
+                        }
+
+                        Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
+                        String t = new Gson().toJson(mainList, type);
+                        sharedPrefsUtils.writeSharedPrefs("SONGS_LIST", t);
+
+                        requestStoragePermission();
+                    })
+                    .addOnFailureListener(exception -> Log.e(TAG, "Unable to query files.", exception));
         }
     }
-
+    /**
+     * For Syncing s
+     */
     private static class PerformBackgroundTasks extends AsyncTask<String, Integer, Long> {
 
         private WeakReference<Activity> weakReference;
@@ -294,7 +435,6 @@ public class LaunchActivity extends AppCompatActivity {
                 Log.d(TAG, "Unable to perform sync");
                 e.printStackTrace();
             }
-
             return null;
         }
 

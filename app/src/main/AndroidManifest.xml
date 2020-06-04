@@ -12,37 +12,26 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".DriveModeActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeToolbar"/>
+
         <activity
             android:name=".HomeActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeToolbar" />
+
         <activity
             android:name="PlayActivity"
             android:label="@string/title_activity_play"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeToolbar.Overlay"/>
-        <activity android:name=".DriveActivity"></activity>
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-            </intent-filter>
-        </activity>
         <service
             android:name=".services.MusicPlayback"
             android:exported="false">
@@ -74,11 +63,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeToolbar"
             android:windowSoftInputMode="stateVisible"/>
-        <activity
-            android:name=".TimerActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:theme="@style/DialogTheme" />
+
         <activity
             android:name=".LaunchActivity"
             android:label="@string/app_name"
@@ -94,40 +79,6 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name="com.example.gmusicplayer.widgets.MusicWidget4x1"
-            android:label="Music Player">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widgetprovider4x1" />
-        </receiver>
-
-        <receiver
-            android:name="com.example.gmusicplayer.widgets.MusicWidget4x2"
-            android:label="Music Player">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widgetprovider4x2" />
-        </receiver>
-        <receiver
-            android:name="com.example.gmusicplayer.widgets.MusicWidget4x1v2"
-            android:label="Music Player">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widgetprovider4x1v2" />
-        </receiver>
         <activity
             android:name=".IntentPlayActivity"
             android:excludeFromRecents="true"
@@ -153,20 +104,12 @@
                 <data android:mimeType="audio/*" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".EqualizerActivity"
-            android:label="Equalizer"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeToolbar" />
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:screenOrientation="portrait"
-            android:theme="@style/ThemeActionBar" />
+
         <activity
             android:name=".GlobalDetailActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ThemeToolBarTranslucent" />
+
     </application>
 
 </manifest>

@@ -13,7 +13,7 @@
         tools:context=".MainActivity">
 
         <Button
-            android:id="@+id/drive_btn"
+            android:id="@+id/drive_signIn_btn"
             android:layout_height="48dp"
             android:layout_width="match_parent"
             android:layout_weight="1"

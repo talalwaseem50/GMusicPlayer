@@ -16,10 +16,11 @@
         android:title="@string/search"/>
 
     <item
-        android:id="@+id/sleep_timer"
-        app:showAsAction="never"
-        android:title="Set Sleep Timer"/>
-
+        android:id="@+id/action_uploadBtn"
+        android:orderInCategory="104"
+        app:showAsAction="always"
+        android:icon="@drawable/app_cloud_upload"
+        android:title="Upload"/>
 
     <item
         android:id="@+id/sync"
@@ -30,12 +31,8 @@
         app:showAsAction="never"
         android:title="Change Theme"/>
 
-    <item android:id="@+id/equalizer"
-        app:showAsAction="never"
-        android:title="Equalizer"/>
-
     <item
-        android:id="@+id/settings"
+        android:id="@+id/signOut"
         app:showAsAction="never"
-        android:title="Settings"/>
+        android:title="Log Out"/>
 </menu>

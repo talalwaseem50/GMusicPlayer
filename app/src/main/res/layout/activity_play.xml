@@ -164,7 +164,7 @@
                 android:layout_height="48dp"
                 android:layout_above="@+id/cardView"
                 android:orientation="horizontal"
-                android:weightSum="5">
+                android:weightSum="3">
 
                 <ImageView
                     android:id="@+id/infoImageView"
@@ -174,16 +174,6 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:padding="12dp"
                     android:src="@drawable/ic_info_outline_black_24dp"
-                    android:tint="@color/white" />
-
-                <ImageView
-                    android:id="@+id/sleepTimerImageView"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="12dp"
-                    android:src="@drawable/ic_timer_black_24dp"
                     android:tint="@color/white" />
 
                 <ImageView
@@ -204,16 +194,6 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:padding="12dp"
                     android:src="@drawable/app_shuffle"
-                    android:tint="@color/white" />
-
-                <ImageView
-                    android:id="@+id/equalizer"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@drawable/app_equalizer"
                     android:tint="@color/white" />
 
             </LinearLayout>

@@ -50,9 +50,6 @@ import com.example.gmusicplayer.helpers.MediaStyleHelper;
 import com.example.gmusicplayer.utils.CommonUtils;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
 import com.example.gmusicplayer.utils.SongsUtils;
-import com.example.gmusicplayer.widgets.MusicWidget4x1;
-import com.example.gmusicplayer.widgets.MusicWidget4x1v2;
-import com.example.gmusicplayer.widgets.MusicWidget4x2;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -158,10 +155,6 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
                     }
                     case ACTION_TRACK_NEXT: {
                         processNextRequest();
-                        break;
-                    }
-                    case ACTION_REPEAT: {
-                        musicWidgetsReset();
                         break;
                     }
                     case ACTION_CLOSE: {
@@ -622,8 +615,6 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
     }
 
     private void showPlayingNotification() {
-        musicWidgetsReset();
-
         createChannel();
         NotificationCompat.Builder builder
                 = MediaStyleHelper.from(MusicPlayback.this, mMediaSessionCompat);
@@ -653,8 +644,6 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
     }
 
     private void showPausedNotification() {
-        musicWidgetsReset();
-
         createChannel();
         NotificationCompat.Builder builder
                 = MediaStyleHelper.from(MusicPlayback.this, mMediaSessionCompat);
@@ -785,8 +774,8 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
 
     private void setMediaPlayer(String path) {
         getCurrentMediaPlayer().reset();
-        File file = new File(path);
-        if (file.exists()) {
+        //File file = new File(path);
+        if (true) {
             try {
                 addVoteToTrack(path);
                 getCurrentMediaPlayer().setDataSource(path);
@@ -953,26 +942,6 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
         result.sendResult(null);
-    }
-
-    /******* ---------------------------------------------------------------
-     Music Widgets
-     ----------------------------------------------------------------*******/
-
-    private void musicWidgetsReset() {
-        updateMusicWidget(this, MusicWidget4x1.class);
-        updateMusicWidget(this, MusicWidget4x1v2.class);
-        updateMusicWidget(this, MusicWidget4x2.class);
-    }
-
-    private void updateMusicWidget(Context context, Class<?> cls) {
-        Intent intent = new Intent(context, cls);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        intent.putExtra("state", mPlaybackStateBuilder.build().getState());
-        int[] ids = AppWidgetManager.getInstance(context)
-                .getAppWidgetIds(new ComponentName(context, cls));
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        context.sendBroadcast(intent);
     }
 
 }

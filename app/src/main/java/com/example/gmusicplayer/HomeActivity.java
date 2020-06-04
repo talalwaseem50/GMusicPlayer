@@ -132,23 +132,14 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        switch (id) {
+            switch (id) {
             case R.id.action_searchBtn:
                 Intent intent = new Intent(this, SearchActivity.class);
                 startActivity(intent);
                 break;
-            case R.id.sleep_timer:
-                startActivity(new Intent(this, TimerActivity.class));
-                break;
             case R.id.sync:
                 startActivity(new Intent(this, LaunchActivity.class).putExtra("sync", true));
                 finish();
-                break;
-            case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                break;
-            case R.id.equalizer:
-                startActivity(new Intent(this, EqualizerActivity.class));
                 break;
             case R.id.changeTheme:
                 final SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(this);

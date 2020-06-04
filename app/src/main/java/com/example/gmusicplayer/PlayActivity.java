@@ -250,24 +250,12 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 shuffle();
             }
         });
-        findViewById(R.id.equalizer).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(PlayActivity.this, EqualizerActivity.class));
-            }
-        });
         findViewById(R.id.infoImageView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 songsUtils.info(
                         songsUtils.queue().get(sharedPrefsUtils.readSharedPrefsInt("musicID", 0))
                 ).show();
-            }
-        });
-        findViewById(R.id.sleepTimerImageView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(PlayActivity.this, TimerActivity.class));
             }
         });
 
@@ -672,12 +660,8 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         int id = item.getItemId();
         if (id == android.R.id.home) {
             backPressed();
-        } else if (id == R.id.action_drive_mode) {
-            startActivity(new Intent(PlayActivity.this, DriveModeActivity.class));
         } else if (id == R.id.add_to_playlist) {
             songsUtils.addToPlaylist(songsUtils.queue().get(sharedPrefsUtils.readSharedPrefsInt("musicID", 0)));
-        } else if (id == R.id.equalizer) {
-            startActivity(new Intent(PlayActivity.this, EqualizerActivity.class));
         } else if (id == R.id.save_as_playlist) {
             final Dialog alertDialog = new Dialog(this);
             alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);

@@ -58,6 +58,7 @@ public class SongsUtils {
 
     private Context context;
     private SharedPrefsUtils sharedPrefsUtils;
+    private DriveUtils mDriveUtils;
     private static ArrayList<SongModel> mainList = new ArrayList<>();
     private static ArrayList<SongModel> queue = new ArrayList<>();
     private static ArrayList<HashMap<String, String>> albums = new ArrayList<>();
@@ -604,23 +605,22 @@ public class SongsUtils {
 
     private void grabIfEmpty() {
         if (mainList.isEmpty()) {
-            grabData();
             Log.d(TAG, "Grabbing data for player...");
+            data();
         } else {
             Log.d(TAG, "Data is present. Just setting context.");
         }
     }
 
-    private void grabData() {
-        String[] STAR = {"*"};
+    private void data() {
+        Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
+        ArrayList<SongModel> restoreData = new Gson().fromJson(sharedPrefsUtils.readSharedPrefsString("SONGS_LIST", null), type);
+        mainList = restoreData;
 
-        boolean excludeShortSounds = sharedPrefsUtils.readSharedPrefsBoolean("excludeShortSounds", false);
-        boolean excludeWhatsApp = sharedPrefsUtils.readSharedPrefsBoolean("excludeWhatsAppSounds", false);
-
-        Cursor cursor;
+        /*Cursor cursor;
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-        cursor = context.getContentResolver().query(uri, STAR, selection, null, null);
+        cursor = context.getContentResolver().query(uri, null, selection, null, null);
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
@@ -630,8 +630,8 @@ public class SongsUtils {
                                     .getColumnIndex(MediaStore.Audio.Media.DURATION));
                     int currentDuration = Math.round(Integer
                             .parseInt(duration));
-                    if (currentDuration > ((excludeShortSounds) ? 60000 : 0)) {
-                        if (!excludeWhatsApp || !cursor.getString(cursor
+                    if (currentDuration > 600000) {
+                        if (!cursor.getString(cursor
                                 .getColumnIndex(MediaStore.Audio.Media.ALBUM)).equals("WhatsApp Audio")) {
                             String songName = cursor
                                     .getString(
@@ -673,7 +673,7 @@ public class SongsUtils {
                 while (cursor.moveToNext());
             }
             cursor.close();
-        }
+        }*/
 
         /*
          * Albums Data
