@@ -1,8 +1,11 @@
 package com.example.gmusicplayer;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,13 +23,17 @@ import com.example.gmusicplayer.fragments.AllSongsFragment;
 import com.example.gmusicplayer.fragments.ArtistGridFragment;
 import com.example.gmusicplayer.fragments.HomeFragment;
 import com.example.gmusicplayer.fragments.PlaylistFragment;
+import com.example.gmusicplayer.services.UploadService;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.gson.Gson;
 
 import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
 
+    private static final String TAG = "HomeActivity";
     ViewPager viewPager;
     int currentViewPagerPosition = 0;
 
@@ -133,97 +140,150 @@ public class HomeActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
             switch (id) {
-            case R.id.action_searchBtn:
-                Intent intent = new Intent(this, SearchActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.sync:
-                startActivity(new Intent(this, LaunchActivity.class).putExtra("sync", true));
-                finish();
-                break;
-            case R.id.changeTheme:
-                final SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(this);
-                final Dialog dialog = new Dialog(this);
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                dialog.setContentView(R.layout.dialog_choose_accent_color);
-                dialog.findViewById(R.id.orange).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","orange");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.cyan).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","cyan");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.green).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","green");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.yellow).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","yellow");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.pink).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","pink");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.purple).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","purple");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.grey).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","grey");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.findViewById(R.id.red).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sharedPrefsUtils.writeSharedPrefs("accentColor","red");
-                        dialog.cancel();
-                        finish();
-                        startActivity(getIntent());
-                    }
-                });
-                dialog.show();
-                break;
+                case R.id.action_uploadBtn:
+                    openFilePicker();
+                    break;
+
+                case R.id.signOut:
+                    stopService(new Intent(this, UploadService.class));
+                    break;
+
+                case R.id.action_searchBtn:
+                    Intent intent = new Intent(this, SearchActivity.class);
+                    startActivity(intent);
+                    break;
+
+                case R.id.sync:
+                    startActivity(new Intent(this, LaunchActivity.class).putExtra("sync", true));
+                    finish();
+                    break;
+
+                case R.id.changeTheme:
+                    final SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(this);
+                    final Dialog dialog = new Dialog(this);
+                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                    dialog.setContentView(R.layout.dialog_choose_accent_color);
+                    dialog.findViewById(R.id.orange).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","orange");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.cyan).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","cyan");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.green).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","green");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.yellow).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","yellow");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.pink).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","pink");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.purple).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","purple");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.grey).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","grey");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.findViewById(R.id.red).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            sharedPrefsUtils.writeSharedPrefs("accentColor","red");
+                            dialog.cancel();
+                            finish();
+                            startActivity(getIntent());
+                        }
+                    });
+                    dialog.show();
+                    break;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private static final int REQUEST_CODE_UPLOAD = 3;
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        switch (requestCode) {
+            case REQUEST_CODE_UPLOAD:
+                if (resultCode == Activity.RESULT_OK && resultData != null) {
+                    Uri uri = resultData.getData();
+                    if (uri != null) {
+                        uploadFile(uri);
+                    }
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, resultData);
+    }
+
+
+    private void openFilePicker() {
+        Log.d(TAG, "Opening file picker.");
+        Intent pickerIntent = createFilePickerIntent();
+        startActivityForResult(pickerIntent, REQUEST_CODE_UPLOAD);
+    }
+
+    public Intent createFilePickerIntent() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("audio/*");
+        return intent;
+    }
+
+    private void uploadFile(Uri uri) {
+        SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(this);
+        GoogleSignInAccount googleAccount = new Gson().fromJson(sharedPrefsUtils.readSharedPrefsString("CREDENTIALS", null), GoogleSignInAccount.class);
+        String t = new Gson().toJson(googleAccount, GoogleSignInAccount.class);
+
+        Intent intent = new Intent(this, UploadService.class);
+        intent.putExtra("MSG", t);
+        intent.setData(uri);
+        startService(intent);
+    }
+
 
 }
 

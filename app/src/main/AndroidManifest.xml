@@ -25,12 +25,11 @@
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeToolbar" />
-
         <activity
-            android:name="PlayActivity"
+            android:name=".PlayActivity"
             android:label="@string/title_activity_play"
             android:screenOrientation="portrait"
-            android:theme="@style/AppThemeToolbar.Overlay"/>
+            android:theme="@style/AppThemeToolbar.Overlay" />
 
         <service
             android:name=".services.MusicPlayback"
@@ -50,6 +49,19 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".services.UploadService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receivers.StatusReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.gmusicplayer.UPLOAD_STARTED" />
+            </intent-filter>
+        </receiver>
+
         <receiver android:name="androidx.media.session.MediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
@@ -62,7 +74,7 @@
             android:label="@string/title_activity_search"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeToolbar"
-            android:windowSoftInputMode="stateVisible"/>
+            android:windowSoftInputMode="stateVisible" />
 
         <activity
             android:name=".LaunchActivity"

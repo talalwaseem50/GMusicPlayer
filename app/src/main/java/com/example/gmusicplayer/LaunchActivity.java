@@ -3,14 +3,17 @@ package com.example.gmusicplayer;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -25,11 +28,14 @@ import androidx.core.content.PermissionChecker;
 
 import com.example.gmusicplayer.database.Playlist;
 
+import com.example.gmusicplayer.receivers.StatusReceiver;
+import com.example.gmusicplayer.services.UploadService;
 import com.example.gmusicplayer.utils.CommonUtils;
 import com.example.gmusicplayer.utils.DriveUtils;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
 import com.example.gmusicplayer.utils.SongsUtils;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.Scope;
@@ -78,7 +84,7 @@ public class LaunchActivity extends AppCompatActivity {
                 PorterDuff.Mode.MULTIPLY);
 
         if ((getIntent().getBooleanExtra("sync", false))) {
-            ((TextView) findViewById(R.id.textView10)).setText("Initiating..");
+            sync = true;
         }
 
         sharedPrefsUtils = new SharedPrefsUtils(getApplicationContext());
@@ -141,36 +147,34 @@ public class LaunchActivity extends AppCompatActivity {
                 .addOnSuccessListener(googleAccount -> {
                     Log.d(TAG, "Signed in as " + googleAccount.getEmail());
 
-                    // Use the authenticated account to sign in to the Drive service.
-                    GoogleAccountCredential credential =
-                            GoogleAccountCredential.usingOAuth2(
-                                    this, Collections.singleton(DriveScopes.DRIVE_FILE));
-                    credential.setSelectedAccount(googleAccount.getAccount());
-                    Drive googleDriveService =
-                            new Drive.Builder(
-                                    AndroidHttp.newCompatibleTransport(),
-                                    new GsonFactory(),
-                                    credential)
-                                    .setApplicationName("Drive API Migration")
-                                    .build();
+                    String t = new Gson().toJson(googleAccount, GoogleSignInAccount.class);
+                    sharedPrefsUtils.writeSharedPrefs("CREDENTIALS", t);
 
-                    // The DriveUtils encapsulates all REST API and SAF functionality.
-                    // Its instantiation is required before handling any onClick actions.
-                    mDriveUtils = new DriveUtils(googleDriveService);
+                    BroadcastReceiver br = new StatusReceiver();
+                    IntentFilter filter = new IntentFilter();
+                    filter.addAction("com.example.gmusicplayer.UPLOAD_STARTED");
+                    getApplicationContext().registerReceiver(br, filter);
 
                     Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
                     ArrayList<SongModel> restoreData = new Gson().fromJson(sharedPrefsUtils.readSharedPrefsString("SONGS_LIST", null), type);
-                    if (restoreData == null)
-                        query();
+
+                    if (restoreData == null) {
+                        Intent intent = new Intent(this, UploadService.class);
+                        intent.putExtra("MSG", t);
+                        startService(intent);
+
+                        query(googleAccount);
+                        requestStoragePermission();
+                    }
+                    else if (sync) {
+                        query(googleAccount);
+                        SongsUtils songsUtils = new SongsUtils(this);
+                        songsUtils.sync();
+                        requestStoragePermission();
+                    }
                     else
                         requestStoragePermission();
 
-                    if ((getIntent().getBooleanExtra("sync", false))) {
-                        ((TextView) findViewById(R.id.textView10)).setText("Syncing..");
-                        SongsUtils songsUtils = new SongsUtils(this);
-                        songsUtils.sync();
-                        sync = true;
-                    }
                 })
                 .addOnFailureListener(exception -> Log.e(TAG, "Unable to sign in.", exception));
     }
@@ -216,10 +220,11 @@ public class LaunchActivity extends AppCompatActivity {
     /**
      * Queries the Drive REST API for files visible to this app and lists them in the content view.
      */
-    private void query() {
+    private void query(GoogleSignInAccount googleAccount) {
         if (mDriveUtils != null) {
-            Log.d(TAG, "Querying for files.");
+            mDriveUtils = new DriveUtils(googleAccount, this);
 
+            Log.d(TAG, "Querying for files.");
             mDriveUtils.queryFiles()
                     .addOnSuccessListener(fileList -> {
                         ArrayList<SongModel> mainList = new ArrayList<SongModel>();
@@ -259,14 +264,14 @@ public class LaunchActivity extends AppCompatActivity {
                         Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
                         String t = new Gson().toJson(mainList, type);
                         sharedPrefsUtils.writeSharedPrefs("SONGS_LIST", t);
-
-                        requestStoragePermission();
                     })
                     .addOnFailureListener(exception -> Log.e(TAG, "Unable to query files.", exception));
         }
     }
+
+
     /**
-     * For Syncing s
+     * For Syncing
      */
     private static class PerformBackgroundTasks extends AsyncTask<String, Integer, Long> {
 

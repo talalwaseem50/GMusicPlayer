@@ -377,8 +377,8 @@ public class SongsUtils {
     public void play(int id, ArrayList<SongModel> array) {
         Log.d("MusicUtilsConsole", "Initiating the play request to MusicPlayback Service");
         if (!array.isEmpty()) {
-            File file = new File(array.get(id).getPath());
-            if (file.exists()) {
+            //File file = new File(array.get(id).getPath());
+            if (true) {
                 replaceQueue(array);
                 setCurrentMusicID(id);
                 Intent intent = new Intent(MusicPlayback.ACTION_PLAY);
@@ -604,10 +604,13 @@ public class SongsUtils {
     }
 
     private void grabIfEmpty() {
-        if (mainList.isEmpty()) {
-            Log.d(TAG, "Grabbing data for player...");
-            data();
+        if (mainList != null) {
+            if (mainList.isEmpty()) {
+                Log.d(TAG, "Grabbing data for player...");
+                data();
+            }
         } else {
+            data();
             Log.d(TAG, "Data is present. Just setting context.");
         }
     }
@@ -617,63 +620,10 @@ public class SongsUtils {
         ArrayList<SongModel> restoreData = new Gson().fromJson(sharedPrefsUtils.readSharedPrefsString("SONGS_LIST", null), type);
         mainList = restoreData;
 
-        /*Cursor cursor;
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-        cursor = context.getContentResolver().query(uri, null, selection, null, null);
-
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    String duration = cursor
-                            .getString(cursor
-                                    .getColumnIndex(MediaStore.Audio.Media.DURATION));
-                    int currentDuration = Math.round(Integer
-                            .parseInt(duration));
-                    if (currentDuration > 600000) {
-                        if (!cursor.getString(cursor
-                                .getColumnIndex(MediaStore.Audio.Media.ALBUM)).equals("WhatsApp Audio")) {
-                            String songName = cursor
-                                    .getString(
-                                            cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME))
-                                    .replace("_", " ").trim().replaceAll(" +", " ");
-                            String path = cursor.getString(cursor
-                                    .getColumnIndex(MediaStore.Audio.Media.DATA));
-                            String title = cursor.getString(cursor
-                                    .getColumnIndex(MediaStore.Audio.Media.TITLE)).replace("_", " ").trim().replaceAll(" +", " ");
-                            String artistName = cursor.getString(cursor
-                                    .getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                            String albumName = cursor.getString(cursor
-                                    .getColumnIndex(MediaStore.Audio.Media.ALBUM));
-
-                            String albumID = cursor
-                                    .getString(
-                                            cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
-                                    );
-
-                            TimeZone tz = TimeZone.getTimeZone("UTC");
-                            SimpleDateFormat df = new SimpleDateFormat("mm:ss", Locale.getDefault());
-                            df.setTimeZone(tz);
-                            String time = String.valueOf(df.format(currentDuration));
-
-                            // Adding song to list
-                            SongModel songModel = new SongModel();
-                            songModel.setFileName(songName);
-                            songModel.setTitle(title);
-                            songModel.setArtist(artistName);
-                            songModel.setAlbum(albumName);
-                            songModel.setAlbumID(albumID);
-                            songModel.setPath(path);
-                            songModel.setDuration(time);
-
-                            mainList.add(songModel);
-                        }
-                    }
-                }
-                while (cursor.moveToNext());
-            }
-            cursor.close();
-        }*/
+        if (mainList == null) {
+            mainList = new ArrayList<SongModel>();
+            return;
+        }
 
         /*
          * Albums Data
