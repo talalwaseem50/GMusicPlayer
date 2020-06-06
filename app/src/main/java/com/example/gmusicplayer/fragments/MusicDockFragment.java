@@ -243,9 +243,9 @@ public class MusicDockFragment extends Fragment {
         }
         if (mLastPlaybackState == null) {
             SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(getActivity());
-            if (sharedPrefsUtils.readSharedPrefsString("raw_path", "").equals(songsUtils.queue().get(songsUtils.getCurrentMusicID()).getPath())) {
+            //if (sharedPrefsUtils.readSharedPrefsString("raw_path", "").equals(songsUtils.queue().get(songsUtils.getCurrentMusicID()).getPath())) {
                 progressBar.setMax(sharedPrefsUtils.readSharedPrefsInt("durationInMS", 0));
-            }
+            //}
             return;
         }
         int duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
@@ -255,9 +255,9 @@ public class MusicDockFragment extends Fragment {
     private void updateProgress() {
         if (mLastPlaybackState == null) {
             SharedPrefsUtils sharedPrefsUtils = new SharedPrefsUtils(getActivity());
-            if (sharedPrefsUtils.readSharedPrefsString("raw_path", "").equals(songsUtils.queue().get(songsUtils.getCurrentMusicID()).getPath())) {
+            //if (sharedPrefsUtils.readSharedPrefsString("raw_path", "").equals(songsUtils.queue().get(songsUtils.getCurrentMusicID()).getPath())) {
                 progressBar.setProgress(sharedPrefsUtils.readSharedPrefsInt("song_position", 0));
-            }
+            //}
             return;
         }
         long currentPosition = mLastPlaybackState.getPosition();

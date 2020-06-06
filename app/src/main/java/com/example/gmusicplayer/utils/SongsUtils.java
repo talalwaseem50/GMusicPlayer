@@ -297,7 +297,7 @@ public class SongsUtils {
         mainList.clear();
         albums.clear();
         artists.clear();
-        grabIfEmpty();
+        //grabIfEmpty();
     }
 
     public void addToQueue(SongModel song) {

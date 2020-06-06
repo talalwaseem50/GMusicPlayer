@@ -26,6 +26,8 @@ import com.example.gmusicplayer.utils.ImageUtils;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
 import com.example.gmusicplayer.utils.SongsUtils;
 import com.example.gmusicplayer.views.NoScrollListView;
+import com.google.android.gms.ads.doubleclick.PublisherAdRequest;
+import com.google.android.gms.ads.doubleclick.PublisherAdView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +36,7 @@ import java.util.Objects;
 public class HomeFragment extends Fragment {
 
     SongsUtils songsUtils;
+    private PublisherAdView mPublisherAdView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,8 +51,11 @@ public class HomeFragment extends Fragment {
 
         songsUtils = new SongsUtils(getActivity());
 
-        ListView listView = view.findViewById(R.id.listView);
+        mPublisherAdView = view.findViewById(R.id.publisherAdView);
+        PublisherAdRequest adRequest = new PublisherAdRequest.Builder().build();
+        mPublisherAdView.loadAd(adRequest);
 
+        ListView listView = view.findViewById(R.id.listView);
         MergeAdapter mergeAdapter = new MergeAdapter();
 
         if (!songsUtils.allSongs().isEmpty()) {
@@ -255,6 +261,8 @@ public class HomeFragment extends Fragment {
         }
         return three_grid;
     }
+
+
 }
 
 

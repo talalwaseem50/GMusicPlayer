@@ -21,7 +21,7 @@ public class StatusReceiver extends BroadcastReceiver {
         }
         else if (status == 2) {
             Log.d(TAG, "Upload Complete Status");
-
+            Toast.makeText(context, "Upload Completed", Toast.LENGTH_SHORT).show();
         }
 
     }

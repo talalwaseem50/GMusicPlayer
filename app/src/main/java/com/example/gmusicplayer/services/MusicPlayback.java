@@ -50,11 +50,15 @@ import com.example.gmusicplayer.helpers.MediaStyleHelper;
 import com.example.gmusicplayer.utils.CommonUtils;
 import com.example.gmusicplayer.utils.SharedPrefsUtils;
 import com.example.gmusicplayer.utils.SongsUtils;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MusicPlayback extends MediaBrowserServiceCompat implements
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener {
@@ -784,16 +788,27 @@ public class MusicPlayback extends MediaBrowserServiceCompat implements
                 e.printStackTrace();
             }
 
-            try {
-                getCurrentMediaPlayer().prepare();
-            } catch (IOException ignored) {
-            }
+            playerPrepare().addOnFailureListener(exception -> {
+                Log.e(TAG, "Failed Media Player Prepare", exception);
+                processNextRequest();
+            });
+
         } else {
             processNextRequest();
             Log.d(TAG, "Error finding file so we skipped to next.");
             (new CommonUtils(this)).showTheToast("Error finding music file");
         }
     }
+
+    private final Executor mExecutor = Executors.newSingleThreadExecutor();
+    private Task<Void> playerPrepare() {
+        return Tasks.call(mExecutor, () -> {
+            getCurrentMediaPlayer().prepare();
+            return null;
+        });
+    }
+
+
 
     private void initMediaSession() {
         ComponentName mediaButtonReceiver = new ComponentName(getApplicationContext(), MediaButtonReceiver.class);

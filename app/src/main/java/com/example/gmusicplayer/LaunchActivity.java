@@ -4,12 +4,14 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.media.MediaMetadataRetriever;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -221,54 +223,51 @@ public class LaunchActivity extends AppCompatActivity {
      * Queries the Drive REST API for files visible to this app and lists them in the content view.
      */
     private void query(GoogleSignInAccount googleAccount) {
-        if (mDriveUtils != null) {
-            mDriveUtils = new DriveUtils(googleAccount, this);
+        mDriveUtils = new DriveUtils(googleAccount, this);
 
-            Log.d(TAG, "Querying for files.");
-            mDriveUtils.queryFiles()
-                    .addOnSuccessListener(fileList -> {
-                        ArrayList<SongModel> mainList = new ArrayList<SongModel>();
-                        TimeZone tz = TimeZone.getTimeZone("UTC");
-                        SimpleDateFormat df = new SimpleDateFormat("mm:ss", Locale.getDefault());
-                        df.setTimeZone(tz);
+        Log.d(TAG, "Querying for files.");
+        mDriveUtils.queryFiles()
+                .addOnSuccessListener(fileList -> {
+                    ArrayList<SongModel> mainList = new ArrayList<SongModel>();
+                    TimeZone tz = TimeZone.getTimeZone("UTC");
+                    SimpleDateFormat df = new SimpleDateFormat("mm:ss", Locale.getDefault());
+                    df.setTimeZone(tz);
 
-                        for (File file : fileList.getFiles()) {
-                            if (file.getMimeType().contains("audio/mpeg")) {
-                                String link = file.getWebContentLink();
+                    for (File file : fileList.getFiles()) {
+                        if (file.getMimeType().contains("audio/mpeg")) {
+                            String link = file.getWebContentLink();
 
-                                MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
-                                metadataRetriever.setDataSource(link, new HashMap<String, String>());
+                            MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+                            metadataRetriever.setDataSource(link, new HashMap<String, String>());
 
-                                String songName = file.getName();
-                                String title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                                String artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                                String album = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-                                String albumID = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST);
-                                String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                            String songName = file.getName();
+                            String title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                            String artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                            String album = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                            String albumID = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST);
+                            String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
-                                int currentDuration = Math.round(Integer.parseInt(duration));
-                                String time = String.valueOf(df.format(currentDuration));
+                            int currentDuration = Math.round(Integer.parseInt(duration));
+                            String time = String.valueOf(df.format(currentDuration));
 
-                                SongModel songModel = new SongModel();
-                                songModel.setFileName(songName);
-                                songModel.setTitle(title);
-                                songModel.setArtist(artist);
-                                songModel.setAlbum(album);
-                                songModel.setAlbumID(albumID);
-                                songModel.setPath(link);
-                                songModel.setDuration(time);
-                                mainList.add(songModel);
-                            }
+                            SongModel songModel = new SongModel();
+                            songModel.setFileName(songName);
+                            songModel.setTitle(title);
+                            songModel.setArtist(artist);
+                            songModel.setAlbum(album);
+                            songModel.setAlbumID(albumID);
+                            songModel.setPath(link);
+                            songModel.setDuration(time);
+                            mainList.add(songModel);
                         }
+                    }
 
-                        Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
-                        String t = new Gson().toJson(mainList, type);
-                        sharedPrefsUtils.writeSharedPrefs("SONGS_LIST", t);
-                    })
-                    .addOnFailureListener(exception -> Log.e(TAG, "Unable to query files.", exception));
-        }
+                    Type type = new TypeToken<ArrayList<SongModel>>() {}.getType();
+                    String t = new Gson().toJson(mainList, type);
+                    sharedPrefsUtils.writeSharedPrefs("SONGS_LIST", t);
+                })
+                .addOnFailureListener(exception -> Log.e(TAG, "Unable to query files.", exception));
     }
-
 
     /**
      * For Syncing

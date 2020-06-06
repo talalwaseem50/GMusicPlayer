@@ -23,6 +23,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
+//import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.gson.Gson;
 
 import java.io.FileNotFoundException;
@@ -99,6 +100,12 @@ public class UploadService extends Service {
 
                 mDriveService.permissions().create(fileId, userPermission)
                         .setFields("id").execute();
+
+                Intent in = new Intent("com.example.gmusicplayer.UPLOAD_STARTED");
+                in.putExtra("STATUS", 2);
+                sendBroadcast(in);
+                Log.d("UploadService", "Upload Completed Status");
+
                 Log.d("UploadService", "Permissions Updated");
 
             } catch (IOException e) {
@@ -144,14 +151,18 @@ public class UploadService extends Service {
         Log.d("UploadService", "In Upload Service Started");
 
         if (intent.getData() != null) {
-            //Message msg = serviceHandler.obtainMessage();
-            //msg.obj = intent.getData();
-            //serviceHandler.sendMessage(msg);
+            Message msg = serviceHandler.obtainMessage();
+            msg.obj = intent.getData();
+            serviceHandler.sendMessage(msg);
 
             Intent in = new Intent("com.example.gmusicplayer.UPLOAD_STARTED");
             in.putExtra("STATUS", 1);
             sendBroadcast(in);
             Log.d("UploadService", "Upload Started Status");
+
+            /*bundle.putString(FirebaseAnalytics.Param.ITEM_ID, id);
+            bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, name);
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);*/
         }
         return START_REDELIVER_INTENT;
     }
@@ -179,18 +190,5 @@ public class UploadService extends Service {
         return new String[]{name, extension};
     }
 
-    public void changePermission (String fileId) {
-            Permission userPermission = new Permission()
-                    .setType("anyone")
-                    .setRole("reader")
-                    .setAllowFileDiscovery(false);
-            try {
-                mDriveService.permissions().create(fileId, userPermission)
-                        .setFields("id").execute();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-    }
 
 }
